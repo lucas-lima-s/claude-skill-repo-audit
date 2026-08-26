@@ -1,0 +1,8 @@
+name = "local"
+extends = "public"
+downgrade_warn_to_info = true
+
+[overrides]
+"deferred_work.marker" = "INFO"
+"github.description" = "INFO"
+"github.topics" = "INFO"

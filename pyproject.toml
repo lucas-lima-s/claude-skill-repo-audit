@@ -1,0 +1,33 @@
+[project]
+name = "repo-audit"
+version = "0.1.0"
+description = "Publish gate for repositories: secrets, git-history identity, docs and metadata checks."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = ["ruff>=0.6", "pytest>=8.0"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/audit.py" = ["E402"]
+"scripts/scan.py" = ["E402"]
+"scripts/dashboard.py" = ["E402"]
+"scripts/render_demo.py" = ["E402"]
+"scripts/make_fixture.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

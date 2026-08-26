@@ -1,0 +1,21 @@
+profile = "portfolio"
+
+[identity]
+allowed_author_emails = ["106186397+lucas-lima-s@users.noreply.github.com"]
+allowed_author_names = ["lucas-lima-s", "Lucas de Lima"]
+
+[secrets]
+ignore_paths = ["examples/**", "tests/**"]
+
+[tests]
+command = ["uv", "run", "--frozen", "pytest", "-q"]
+timeout_seconds = 300
+
+[staleness]
+warn_days = 180
+fail_days = 0
+
+[github]
+description_min_length = 30
+topics_min = 3
+topics_max = 5

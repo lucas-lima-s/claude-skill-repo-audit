@@ -1,0 +1,6 @@
+# Copy this file to repo-audit.local.toml and fill in real terms.
+# repo-audit.local.toml is gitignored and must never be committed.
+[denylist]
+terms = ["acme-corp", "acmecorp", "internal-widget"]
+email_domains = ["acme-corp.example"]
+regexes = ['(?i)\bWIDGET-\d{3,}\b']

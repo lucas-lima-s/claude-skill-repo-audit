@@ -1,0 +1,6 @@
+name = "public"
+extends = "portfolio"
+downgrade_warn_to_info = false
+
+[overrides]
+"deferred_work.marker" = "INFO"

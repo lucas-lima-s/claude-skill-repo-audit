@@ -1,0 +1,47 @@
+name = "portfolio"
+extends = ""
+downgrade_warn_to_info = false
+
+enabled_checks = [
+    "artifacts",
+    "gitattributes",
+    "gitignore",
+    "pyproject",
+    "dev_deps",
+    "ci_workflow",
+    "changelog_format",
+    "python_style",
+    "hardcoded_paths",
+    "secrets",
+    "git_history",
+    "content_denylist",
+    "test_execution",
+    "language_truth",
+    "readme_links",
+    "visual_assets",
+    "staleness",
+    "github_meta",
+    "deferred_work",
+]
+
+layer2_prompts = [
+    "readme_quality",
+    "setup_completeness",
+    "changelog_significance",
+    "language_coherence",
+    "portfolio_narrative",
+]
+
+[artifacts]
+"README.md" = { path = "README.md", missing = "FAIL", requires = "none" }
+"LICENSE" = { path = "LICENSE", missing = "FAIL", requires = "none" }
+"SETUP.md" = { path = "SETUP.md", missing = "WARN", requires = "none" }
+"CONTRIBUTING.md" = { path = "CONTRIBUTING.md", missing = "WARN", requires = "none" }
+"CHANGELOG.md" = { path = "CHANGELOG.md", missing = "WARN", requires = "none" }
+".gitignore" = { path = ".gitignore", missing = "WARN", requires = "none" }
+".gitattributes" = { path = ".gitattributes", missing = "INFO", requires = "none" }
+"pyproject.toml" = { path = "pyproject.toml", missing = "WARN", requires = "python_code" }
+"CI workflow" = { path = ".github/workflows/ci.yml", missing = "WARN", requires = "git_repo" }
+"visual asset" = { path = "docs", missing = "INFO", requires = "visual" }
+
+[overrides]

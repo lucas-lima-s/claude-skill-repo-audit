@@ -1,0 +1,14 @@
+[denylist]
+terms = []
+email_domains = []
+regexes = []
+soft_regexes = ['(?i)\b[A-Z]{2,6}-\d{2,6}\b']
+severity = "FAIL"
+
+[denylist.allow]
+paths = []
+marker = "repo-audit: allow-term"
+
+[denylist.structural]
+flag_non_public_author_domains = true
+public_email_domains = ["users.noreply.github.com", "gmail.com", "outlook.com", "hotmail.com", "proton.me", "protonmail.com", "icloud.com", "yahoo.com", "fastmail.com"]
