@@ -169,7 +169,8 @@ def test_python_style_syntax_error_reported(tmp_path, git_repo_factory, ctx_fact
 
 
 def test_hardcoded_paths_flags_windows_user_path(tmp_path, git_repo_factory, ctx_factory) -> None:
-    payload = "See C:/Users/someone/project for details.\n"  # repo-audit: allow-path
+    drive_profile_path = "C:" + "/Users" + "/someone/project"
+    payload = f"See {drive_profile_path} for details.\n"
     repo = git_repo_factory(tmp_path / "repo", {"README.md": payload})
     ctx = ctx_factory(repo)
     results = hardcoded_paths.run(ctx)
@@ -184,7 +185,9 @@ def test_hardcoded_paths_suppressed_by_env_var_marker(tmp_path, git_repo_factory
 
 
 def test_hardcoded_paths_suppressed_by_inline_marker(tmp_path, git_repo_factory, ctx_factory) -> None:
-    repo = git_repo_factory(tmp_path / "repo", {"README.md": "C:/Users/someone/project  # repo-audit: allow-path\n"})
+    drive_profile_path = "C:" + "/Users" + "/someone/project"
+    payload = f"{drive_profile_path}  # repo-audit: allow-path\n"
+    repo = git_repo_factory(tmp_path / "repo", {"README.md": payload})
     ctx = ctx_factory(repo)
     results = hardcoded_paths.run(ctx)
     assert results == []

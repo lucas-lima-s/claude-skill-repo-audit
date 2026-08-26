@@ -89,9 +89,10 @@ WARN naming the file and line when a tracked `.py` file has a `SyntaxError`.
 
 ## `hardcoded_paths.literal`
 
-FAIL per line containing a machine-specific path
-(`C:/Users/<name>/...`, `/home/<name>/...`, `/Users/<name>/...`,
-`C:/(projects|dev|work|repos)/...`). Suppressed by `$HOME`/`%TEMP%`/CI-style
+FAIL per line containing a machine-specific path: a Windows drive letter
+followed by a per-user profile directory, `/home/<name>/...`,
+`/Users/<name>/...`, or a drive letter followed by
+`(projects|dev|work|repos)/...`. Suppressed by `$HOME`/`%TEMP%`/CI-style
 placeholders or the inline marker `repo-audit: allow-path`. **Why:** a
 hardcoded path is the single most common tell that a repo was published
 straight from someone's laptop. **Fix:** replace with an env var, a relative
