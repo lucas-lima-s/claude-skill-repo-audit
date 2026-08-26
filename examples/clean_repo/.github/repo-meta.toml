@@ -1,0 +1,2 @@
+description = "A minimal fixture repository used to validate repo-audit's clean-path detection."
+topics = ["fixture", "example", "testing", "repo-audit"]
