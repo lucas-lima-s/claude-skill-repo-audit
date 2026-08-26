@@ -169,7 +169,8 @@ def test_python_style_syntax_error_reported(tmp_path, git_repo_factory, ctx_fact
 
 
 def test_hardcoded_paths_flags_windows_user_path(tmp_path, git_repo_factory, ctx_factory) -> None:
-    repo = git_repo_factory(tmp_path / "repo", {"README.md": "See C:/Users/someone/project for details.\n"})
+    payload = "See C:/Users/someone/project for details.\n"  # repo-audit: allow-path
+    repo = git_repo_factory(tmp_path / "repo", {"README.md": payload})
     ctx = ctx_factory(repo)
     results = hardcoded_paths.run(ctx)
     assert any(r.severity == Severity.FAIL for r in results)

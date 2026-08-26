@@ -74,3 +74,11 @@ def test_secrets_ignore_paths_skips_scanning(tmp_path, git_repo_factory, ctx_fac
 
 def test_shannon_entropy_of_repeated_char_is_zero() -> None:
     assert secrets._shannon_entropy("aaaaaaaa") == 0.0
+
+
+def test_lockfile_hex_hashes_are_not_flagged_as_entropy(tmp_path, git_repo_factory, ctx_factory) -> None:
+    lockfile_body = "\n".join(f'hash = "sha256:{("a1b2c3d4e5f6" * 6)[:64]}"' for _ in range(5))
+    repo = git_repo_factory(tmp_path / "repo", {"uv.lock": lockfile_body})
+    ctx = ctx_factory(repo)
+    results = secrets.run(ctx)
+    assert not any(r.file == "uv.lock" for r in results)

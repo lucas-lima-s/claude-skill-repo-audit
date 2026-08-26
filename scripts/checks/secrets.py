@@ -47,6 +47,9 @@ PLACEHOLDER_MARKERS = (
 INLINE_ALLOW_SECRET = "repo-audit: allow-secret"
 ENV_EXCEPTIONS = (".env.example", ".env.sample", ".env.template", ".env.dist")
 MAX_FILE_BYTES = 2 * 1024 * 1024
+LOCKFILE_NAMES = frozenset(
+    {"uv.lock", "package-lock.json", "poetry.lock", "Cargo.lock", "Gemfile.lock", "composer.lock", "yarn.lock"}
+)
 
 
 def _redact(value: str) -> str:
@@ -244,7 +247,7 @@ def run(ctx: CheckContext) -> list[CheckResult]:
 
     for path in ctx.iter_tracked():
         rel = str(path.relative_to(base)).replace("\\", "/")
-        if _ignored(rel, ignore_paths):
+        if _ignored(rel, ignore_paths) or rel.rsplit("/", 1)[-1] in LOCKFILE_NAMES:
             continue
         try:
             if path.stat().st_size > MAX_FILE_BYTES:
