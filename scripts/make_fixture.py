@@ -106,7 +106,8 @@ def build_dirty(out_dir: Path) -> None:
 
     (out_dir / ".env").write_text(f"SECRET_KEY={_planted_key()}\n", encoding="utf-8")
 
-    (out_dir / "config.py").write_text(f'API_TOKEN = "{_high_entropy_token()}"\n', encoding="utf-8")
+    fixture_token_line = f'API_TOKEN = "{_high_entropy_token()}"\n'  # repo-audit: allow-secret
+    (out_dir / "config.py").write_text(fixture_token_line, encoding="utf-8")
 
     build_bat_lines = [f"echo build step {i}" for i in range(600)]
     (out_dir / "build.bat").write_text("\r\n".join(build_bat_lines) + "\r\n", encoding="utf-8")
