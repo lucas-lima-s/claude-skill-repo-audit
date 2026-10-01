@@ -77,6 +77,20 @@ def test_load_config_unions_denylist_terms(tmp_path: Path) -> None:
     assert "bar" in config.denylist.terms
 
 
+def test_load_config_applies_operator_local_when_auditing_other_repo(tmp_path: Path) -> None:
+    tool_root = tmp_path / "tool"
+    tool_root.mkdir()
+    (tool_root / "repo-audit.local.toml").write_text(
+        '[denylist]\nterms = ["nick-from-operator"]\n',
+        encoding="utf-8",
+    )
+    repo = tmp_path / "other"
+    repo.mkdir()
+
+    config = load_config(repo_path=repo, tool_root=tool_root)
+    assert "nick-from-operator" in config.denylist.terms
+
+
 def test_load_config_cli_flag_wins_over_repo_config(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()

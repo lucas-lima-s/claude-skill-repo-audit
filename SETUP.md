@@ -9,15 +9,21 @@
   the dev group yourself (`ruff`, `pytest`).
 - `git` on `PATH` — required for anything beyond `staleness`/`github_meta`
   against a repo that isn't a git working tree.
-- [`gh`](https://cli.github.com/) — optional. Only used as a fallback source
-  for a GitHub token when `github_meta` runs online and `GITHUB_TOKEN` is
-  unset.
+- [`gh`](https://cli.github.com/): optional. Only used as the last fallback
+  source for a GitHub token when `github_meta` or `language_truth` runs online
+  and no other source has one.
 
 ## Install
 
+Clone the repository anywhere and expose that folder to each agent through
+its skills directory (for example `~/.claude/skills/repo-audit`,
+`~/.agents/skills/repo-audit` or `~/.gemini/config/skills/repo-audit`, as a
+symlink or a copy). A skill manager that links one folder per skill works the
+same way.
+
 ```bash
-git clone <this-repo-url> ~/.claude/skills/repo-audit
-cd ~/.claude/skills/repo-audit
+git clone <this-repo-url> <skill-dir>
+cd <skill-dir>
 uv sync
 ```
 
@@ -25,13 +31,15 @@ uv sync
 
 | Variable | Used by | Purpose |
 |---|---|---|
-| `GITHUB_TOKEN` | `github_meta`, `language_truth` (online mode) | Auth for `api.github.com`. Falls back to `gh auth token` when unset. |
+| `GITHUB_TOKEN` | `github_meta`, `language_truth` (online mode) | Auth for `api.github.com`. Read from the process environment only. |
+| `AGENT_WORKBENCH_ROOT` | `github_meta`, `language_truth` (online mode) | Optional. When set and `GITHUB_TOKEN` is not in the environment, the token is looked up with `agent_workbench.vault.get_secret("GITHUB_TOKEN")`. Unset elsewhere; the tool stays standalone. |
 | `REPO_AUDIT_NEVER_EXIT_NONZERO` | `audit.py`, `scan.py` | Set to `1` to force exit code `0` regardless of gate. Manual debugging only — never set this in CI. |
 | `SKILLS_PYTHON` | not read by this tool directly | Present in `.env.example` for parity with other skills in a shared portfolio; harmless to leave unset here. |
 
-`.env` is read only by `github_meta` (for `GITHUB_TOKEN`) and is otherwise
-ignored by the tool. Copy `.env.example` to `.env` locally if you want an
-online run without exporting the variable in your shell.
+Token lookup order: `GITHUB_TOKEN` in the environment, then the optional
+vault above, then `gh auth token`. No `.env` file is read, and in particular
+never the `.env` of the audited repository: a target could otherwise plant a
+token, and its secrets are not this tool's to use.
 
 ## Configuration precedence
 
@@ -42,17 +50,23 @@ and `secrets.extra_patterns|ignore_paths`, which are unioned):
 1. `config/denylist.default.toml` (shipped with this tool — structural only)
 2. `<this tool's own repo-audit.toml>`, but only when auditing this tool
    itself
-3. `<audited-repo>/repo-audit.toml` (committed, generic)
-4. `<audited-repo>/repo-audit.local.toml` (gitignored, machine-local)
-5. `--config <path>` (an explicit override file)
-6. Explicit CLI flags (e.g. `--offline`, `--run-tests`)
+3. `<this tool's own repo-audit.local.toml>`, when auditing any *other* repo
+   (operator overlay: nicknames and employer terms stay on this machine)
+4. `<audited-repo>/repo-audit.toml` (committed, generic)
+5. `<audited-repo>/repo-audit.local.toml` (gitignored, machine-local)
+6. `--config <path>` (an explicit override file)
+7. Explicit CLI flags (e.g. `--offline`, `--run-tests`, `--trust-target`)
+
+`[tests].command` from the audited repository is only executed with
+`--trust-target`; without it `tests.execution` reports INFO and runs nothing.
 
 ## The local-secrets pattern
 
 Two files never get committed, mirroring each other:
 
-- `.env` — real tokens. Copy from `.env.example`.
-- `repo-audit.local.toml` — real denylist terms (an old employer's name, an
+- `.env`: real tokens for your shell (export them; the tool itself reads the
+  environment, not the file). See `.env.example`.
+- `repo-audit.local.toml`: real denylist terms (an old employer's name, an
   internal ticket prefix, an internal domain). Copy from
   `repo-audit.local.toml.example` and fill in the real values.
 
@@ -70,6 +84,13 @@ gitignored is what lets the *shipped* denylist stay structural (see
 `config/denylist.default.toml`) while still being effective on the machine
 that runs the audit.
 
+The same rule applies to hygiene tests *inside* other repos. Do not commit a
+nickname, a drive-letter home-directory literal, a product key, or an employer token
+"because the test needs it". Load those values from `.env` / a gitignored
+local TOML. Splitting the string (`"abc" + "def"`), joining a char array, or
+base64-encoding it is still a leak; `content.denylist_reconstructed` and
+`hardcoded_paths.literal` will flag those encodings.
+
 ## JSON contract
 
 Every report follows schema v2 — see `docs/json_contract.md` for the full
@@ -78,8 +99,8 @@ shape of both a single-repo report and a multi-repo dashboard, and
 
 ## Standalone invocation
 
-The scripts have no dependency on being installed as a Claude Code skill —
-they are plain Python entry points:
+The scripts have no dependency on being installed as an agent skill; they
+are plain Python entry points:
 
 ```bash
 uv run python scripts/audit.py /path/to/repo --profile portfolio --json-out report.json

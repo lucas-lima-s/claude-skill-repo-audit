@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tomllib
 import urllib.error
 import urllib.request
@@ -33,20 +34,20 @@ def _owner_repo(ctx: CheckContext) -> str | None:
     return owner_repo if "/" in owner_repo else None
 
 
-def _read_env_token(ctx: CheckContext) -> str | None:
-    token = os.environ.get("GITHUB_TOKEN")
-    if token:
-        return token
-    env_text = ctx.read_text(".env")
-    if not env_text:
+def _vault_token() -> str | None:
+    root = os.environ.get("AGENT_WORKBENCH_ROOT")
+    if not root:
         return None
-    for line in env_text.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("GITHUB_TOKEN="):
-            value = stripped.split("=", 1)[1].strip().strip('"').strip("'")
-            if value:
-                return value
-    return None
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    try:
+        from agent_workbench.vault import get_secret
+    except ImportError:
+        return None
+    try:
+        return get_secret("GITHUB_TOKEN") or None
+    except Exception:
+        return None
 
 
 def _gh_auth_token() -> str | None:
@@ -59,8 +60,12 @@ def _gh_auth_token() -> str | None:
     return None
 
 
+def resolve_github_token() -> str | None:
+    return os.environ.get("GITHUB_TOKEN") or _vault_token() or _gh_auth_token()
+
+
 def _fetch_repo_metadata(ctx: CheckContext, owner_repo: str) -> dict | None:
-    token = _read_env_token(ctx) or _gh_auth_token()
+    token = resolve_github_token()
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "repo-audit"}
     if token:
         headers["Authorization"] = f"Bearer {token}"

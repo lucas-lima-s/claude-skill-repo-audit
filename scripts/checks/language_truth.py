@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -10,6 +9,8 @@ from auditlib import gitutil
 from auditlib.context import CheckContext
 from auditlib.registry import register
 from auditlib.severity import CheckResult, Severity
+
+from checks.github_meta import resolve_github_token
 
 EXT_TO_LANGUAGE = {
     ".py": "Python",
@@ -120,10 +121,7 @@ def _fetch_github_language(repo_path: str) -> str | None:
     if "/" not in owner_repo:
         return None
 
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        rc, out, _ = gitutil.git(["auth", "token"], repo_path)
-        token = out.strip() if rc == 0 else None
+    token = resolve_github_token()
 
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "repo-audit"}
     if token:

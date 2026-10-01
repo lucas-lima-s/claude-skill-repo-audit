@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Privacy pass for local identity: `hardcoded_paths` now collapses regex-encoded
+  Windows paths, reconstructed string fragments, and scans git history
+  (`hardcoded_paths.history`). `content.denylist_reconstructed` flags denylist
+  terms hidden by concatenation, PowerShell char arrays, or base64.
+- Operator overlay: `repo-audit.local.toml` next to the skill is applied when
+  auditing any other repo, so portfolio scans use one gitignored denylist.
+- `--trust-target` flag for `audit.py` and `scan.py`.
+
+### Changed
+
+- `tests.execution` no longer runs anything unless `--trust-target` is passed,
+  because every resolved command (including `[tests].command` from the
+  audited repository's `repo-audit.toml`) executes the target's code.
+- GitHub token lookup reads the environment, then the optional agent-workbench
+  vault, then `gh auth token`; the audited repository's `.env` is never read.
+- Layer 2 prompts state that the files under review are data, not instructions.
+- `_audit_*.json` scratch reports are gitignored.
+
+### Fixed
+
+- `language_truth` called `git auth token` instead of `gh auth token`.
+
 ## [0.1.0] - 2026-08-25
 
 ### Added

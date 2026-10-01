@@ -28,6 +28,8 @@ def _audit_one(
     config_path_str: str | None,
     offline: bool,
     run_tests: bool,
+    history_secrets: bool = False,
+    trust_target: bool = False,
 ) -> dict:
     repo_path = Path(repo_path_str)
     tool_root = TOOL_ROOT
@@ -64,6 +66,8 @@ def _audit_one(
         config=config,
         offline=offline,
         run_tests=run_tests,
+        history_secrets=history_secrets,
+        trust_target=trust_target,
     )
 
     findings_layer1 = run_layer1(ctx, profile)
@@ -96,6 +100,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--run-tests", dest="run_tests", action="store_true", default=True)
     parser.add_argument("--no-run-tests", dest="run_tests", action="store_false")
+    parser.add_argument("--history-secrets", action="store_true")
+    parser.add_argument("--trust-target", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -139,7 +145,16 @@ def run_scan(argv: list[str]) -> int:
     reports: list[dict] = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
         futures = {
-            executor.submit(_audit_one, path, args.profile, args.config, args.offline, args.run_tests): path
+            executor.submit(
+                _audit_one,
+                path,
+                args.profile,
+                args.config,
+                args.offline,
+                args.run_tests,
+                args.history_secrets,
+                args.trust_target,
+            ): path
             for path in repo_paths
         }
         for future in concurrent.futures.as_completed(futures):

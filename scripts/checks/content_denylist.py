@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from auditlib.context import CheckContext
+from auditlib.privacy import identity_blobs
 from auditlib.registry import register
 from auditlib.severity import CheckResult, Severity
 
@@ -60,30 +61,43 @@ def run(ctx: CheckContext) -> list[CheckResult]:
         for lineno, line in enumerate(text.splitlines(), start=1):
             if marker in line:
                 continue
-            lowered = line.lower()
-            for term in terms:
-                if term.lower() in lowered:
-                    results.append(
-                        CheckResult(
-                            check="content.denylist_term",
-                            severity=Severity.FAIL,
-                            message=f"denylisted term ({_redact(term)}) found in tracked content",
-                            file=rel,
-                            line=lineno,
-                            remediation=f"remove or rewrite this content; add '{marker}' if this is deliberate",
+            surfaces = [line, *identity_blobs(line)]
+            for surface in surfaces:
+                lowered = surface.lower()
+                reconstructed = surface is not line
+                for term in terms:
+                    if term.lower() in lowered:
+                        check = "content.denylist_reconstructed" if reconstructed else "content.denylist_term"
+                        results.append(
+                            CheckResult(
+                                check=check,
+                                severity=Severity.FAIL,
+                                message=f"denylisted term ({_redact(term)}) found in tracked content",
+                                file=rel,
+                                line=lineno,
+                                remediation=(
+                                    "load this term from gitignored local config "
+                                    "(.env / repo-audit.local.toml); do not commit it, even split into "
+                                    f"string fragments. Add '{marker}' only if the match is deliberate"
+                                ),
+                            )
                         )
-                    )
-            for pattern in regexes:
-                if re.search(pattern, line):
-                    results.append(
-                        CheckResult(
-                            check="content.denylist_term",
-                            severity=Severity.FAIL,
-                            message="denylisted pattern matched in tracked content",
-                            file=rel,
-                            line=lineno,
-                            remediation=f"remove or rewrite this content; add '{marker}' if this is deliberate",
+                for pattern in regexes:
+                    if re.search(pattern, surface):
+                        check = "content.denylist_reconstructed" if reconstructed else "content.denylist_term"
+                        results.append(
+                            CheckResult(
+                                check=check,
+                                severity=Severity.FAIL,
+                                message="denylisted pattern matched in tracked content",
+                                file=rel,
+                                line=lineno,
+                                remediation=(
+                                    "load this pattern from gitignored local config; do not commit "
+                                    f"identity or employer terms, even encoded. Add '{marker}' only if "
+                                    "the match is deliberate"
+                                ),
+                            )
                         )
-                    )
 
     return results

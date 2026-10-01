@@ -43,6 +43,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--run-tests", dest="run_tests", action="store_true", default=None)
     parser.add_argument("--no-run-tests", dest="run_tests", action="store_false")
+    parser.add_argument("--trust-target", action="store_true")
     parser.add_argument("--history-secrets", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--render", action="store_true", help="also print a markdown render to stderr")
@@ -82,6 +83,7 @@ def run_audit(argv: list[str]) -> int:
         offline=args.offline,
         run_tests=run_tests,
         history_secrets=args.history_secrets,
+        trust_target=args.trust_target,
     )
 
     registry.discover("auditlib.checks")

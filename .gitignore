@@ -17,5 +17,7 @@ Thumbs.db
 .history/
 *.log
 *.tmp
+.tmp-personal-repos.txt
 /reports/
 dashboard.json
+_audit_*.json

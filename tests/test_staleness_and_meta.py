@@ -119,3 +119,27 @@ def test_visual_assets_present_and_referenced_is_ok(tmp_path, git_repo_factory, 
     ctx.config.visual.required = True
     results = visual_assets.run(ctx)
     assert results[0].severity == Severity.OK
+
+
+def test_github_token_never_comes_from_target_env(tmp_path, monkeypatch) -> None:
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / ".env").write_text("GITHUB_TOKEN=from-target\n", encoding="utf-8")
+    monkeypatch.chdir(target)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("AGENT_WORKBENCH_ROOT", raising=False)
+    monkeypatch.setattr(github_meta, "_gh_auth_token", lambda: None)
+    assert github_meta.resolve_github_token() is None
+
+
+def test_github_token_prefers_environment(monkeypatch) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "from-env")
+    monkeypatch.setattr(github_meta, "_gh_auth_token", lambda: "from-gh")
+    assert github_meta.resolve_github_token() == "from-env"
+
+
+def test_github_token_falls_back_to_gh(monkeypatch) -> None:
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("AGENT_WORKBENCH_ROOT", raising=False)
+    monkeypatch.setattr(github_meta, "_gh_auth_token", lambda: "from-gh")
+    assert github_meta.resolve_github_token() == "from-gh"

@@ -169,12 +169,21 @@ def test_python_style_syntax_error_reported(tmp_path, git_repo_factory, ctx_fact
 
 
 def test_hardcoded_paths_flags_windows_user_path(tmp_path, git_repo_factory, ctx_factory) -> None:
-    drive_profile_path = "C:" + "/Users" + "/someone/project"
+    drive_profile_path = "C:" + "/Users" + "/someone/project"  # repo-audit: allow-path
     payload = f"See {drive_profile_path} for details.\n"
     repo = git_repo_factory(tmp_path / "repo", {"README.md": payload})
     ctx = ctx_factory(repo)
     results = hardcoded_paths.run(ctx)
     assert any(r.severity == Severity.FAIL for r in results)
+
+
+def test_hardcoded_paths_flags_regex_encoded_windows_user_path(tmp_path, git_repo_factory, ctx_factory) -> None:
+    slash_class = "[" + ("\\" * 2) + "/]+"
+    payload = 'pattern = r"C:' + slash_class + "Users" + slash_class + 'someone"\n'
+    repo = git_repo_factory(tmp_path / "repo", {"tests/test_hygiene.py": payload})
+    ctx = ctx_factory(repo)
+    results = hardcoded_paths.run(ctx)
+    assert any(r.check == "hardcoded_paths.literal" and r.severity == Severity.FAIL for r in results)
 
 
 def test_hardcoded_paths_suppressed_by_env_var_marker(tmp_path, git_repo_factory, ctx_factory) -> None:
@@ -185,7 +194,7 @@ def test_hardcoded_paths_suppressed_by_env_var_marker(tmp_path, git_repo_factory
 
 
 def test_hardcoded_paths_suppressed_by_inline_marker(tmp_path, git_repo_factory, ctx_factory) -> None:
-    drive_profile_path = "C:" + "/Users" + "/someone/project"
+    drive_profile_path = "C:" + "/Users" + "/someone/project"  # repo-audit: allow-path
     payload = f"{drive_profile_path}  # repo-audit: allow-path\n"
     repo = git_repo_factory(tmp_path / "repo", {"README.md": payload})
     ctx = ctx_factory(repo)

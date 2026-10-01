@@ -45,6 +45,17 @@ def run(ctx: CheckContext) -> list[CheckResult]:
             )
         ]
 
+    if not ctx.trust_target:
+        return [
+            CheckResult(
+                check="tests.execution",
+                severity=Severity.INFO,
+                message="skipped: running the suite executes code from the audited repository (pass --trust-target)",
+                remediation="re-run with --trust-target only for a repository you own or have reviewed",
+                evidence={"command": command or []},
+            )
+        ]
+
     if command is None:
         return [
             CheckResult(

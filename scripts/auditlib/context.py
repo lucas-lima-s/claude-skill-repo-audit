@@ -20,6 +20,7 @@ class CheckContext:
     tracked_files: tuple[str, ...]
     is_git_repo: bool
     history_secrets: bool = False
+    trust_target: bool = False
 
     def path(self, rel: str) -> Path:
         return Path(self.repo_path) / rel
@@ -71,6 +72,7 @@ def build_context(
     offline: bool,
     run_tests: bool,
     history_secrets: bool = False,
+    trust_target: bool = False,
 ) -> CheckContext:
     is_git = gitutil.is_repo(repo_path)
     tracked = tuple(gitutil.ls_files(repo_path)) if is_git else ()
@@ -83,4 +85,5 @@ def build_context(
         tracked_files=tracked,
         is_git_repo=is_git,
         history_secrets=history_secrets,
+        trust_target=trust_target,
     )

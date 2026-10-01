@@ -305,6 +305,10 @@ def load_config(
         tool_repo_audit = tool_root / "repo-audit.toml"
         if tool_repo_audit.exists():
             raw = _deep_merge(raw, _parse_toml(tool_repo_audit))
+    else:
+        operator_local = tool_root / "repo-audit.local.toml"
+        if operator_local.exists():
+            raw = _deep_merge(raw, _parse_toml(operator_local))
 
     repo_toml = repo_path / "repo-audit.toml"
     if repo_toml.exists():

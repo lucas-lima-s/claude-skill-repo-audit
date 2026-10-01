@@ -91,12 +91,24 @@ WARN naming the file and line when a tracked `.py` file has a `SyntaxError`.
 
 FAIL per line containing a machine-specific path: a Windows drive letter
 followed by a per-user profile directory, `/home/<name>/...`,
-`/Users/<name>/...`, or a drive letter followed by
-`(projects|dev|work|repos)/...`. Suppressed by `$HOME`/`%TEMP%`/CI-style
-placeholders or the inline marker `repo-audit: allow-path`. **Why:** a
-hardcoded path is the single most common tell that a repo was published
-straight from someone's laptop. **Fix:** replace with an env var, a relative
-path, or a CI-provided temp dir.
+`/Users/<name>/...`, a drive letter followed by
+`(projects|dev|work|repos)/...`, or a local CPython install path. The
+scanner collapses regex encodings of drive-letter home paths and
+reconstructed fragments (concatenated strings, PowerShell char arrays) before
+matching, so a hygiene test that "hides" a home path still fails. Suppressed
+by `$HOME`/`%TEMP%`/CI-style placeholders or the inline marker
+`repo-audit: allow-path`. **Why:** a hardcoded path is the single most common
+tell that a repo was published straight from someone's laptop. **Fix:**
+replace with an env var, a relative path, or a CI-provided temp dir. If the
+line exists only so a privacy test can search for it, load it from gitignored
+local config instead of committing it.
+
+## `hardcoded_paths.history`
+
+FAIL when `git log -G` finds a machine-path pattern (`Users`, local `PythonNN`,
+`/home/<name>`) in history, even if the working tree is clean. **Fix:** rewrite
+history, or confirm the only remaining hit is a structural detector that does
+not name a real user.
 
 ## `secrets.pattern`
 
@@ -170,7 +182,17 @@ skipped.
 FAIL per tracked-file line matching a denylist term or regex, honoring
 `denylist.allow.paths` globs and the inline marker `repo-audit: allow-term`.
 The matched term is redacted to its first 3 characters. **Fix:** remove or
-rewrite the content.
+rewrite the content. Private terms belong in `repo-audit.local.toml` or `.env`,
+not in a committed hygiene list.
+
+## `content.denylist_reconstructed`
+
+FAIL when a denylist term or regex matches a string that was not contiguous in
+the file: `"foo" + "bar"`, `_pattern("foo", "bar")`, a PowerShell `@('f','o')`
+char array, or a base64 literal that decodes to the term. **Why:** splitting or
+encoding a nickname / employer name / product key is still publishing it.
+**Fix:** delete the fragments from the tracked file and load the real terms
+from gitignored local config.
 
 ## `tests.execution`
 
@@ -178,7 +200,9 @@ Runs the resolved test command (`config.tests.command`, then `uv run
 --frozen pytest -q` if `uv.lock` exists, then the current interpreter's
 `pytest` if it's a declared dev dependency, then `npm test`). OK on exit 0,
 FAIL on a non-zero exit or a timeout, WARN when no command resolves, INFO
-when disabled via `--no-run-tests`. **Fix:** fix the failing tests, or
+when disabled via `--no-run-tests` or when `--trust-target` was not passed.
+Every one of those commands executes code from the audited repository, so
+nothing runs without that explicit trust flag. **Fix:** fix the failing tests, or
 declare a `[tests].command` if the auto-detected one is wrong.
 
 ## `language.declared_vs_real`

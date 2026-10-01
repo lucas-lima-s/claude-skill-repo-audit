@@ -18,9 +18,12 @@ list of repositories in parallel and renders a portfolio dashboard.
 
 ## Install
 
+Clone it anywhere and link the folder into each agent's skills directory
+(Claude Code, Codex, agy or Cursor); see `SETUP.md`.
+
 ```bash
-git clone <this-repo-url> ~/.claude/skills/repo-audit
-cd ~/.claude/skills/repo-audit
+git clone <this-repo-url> <skill-dir>
+cd <skill-dir>
 uv sync
 ```
 
@@ -52,7 +55,7 @@ else goes to stderr.
 | `history.author_identity` | FAIL | a commit author/committer that isn't your portfolio identity, a GitHub noreply address, or a known public provider |
 | `history.commit_message` / `history.ref_name` | FAIL / WARN | a configured denylisted term in a commit message or ref name |
 | `content.denylist_term` | FAIL | a configured denylisted term in tracked file content |
-| `tests.execution` | OK / FAIL / WARN | the repo's own test suite, actually run |
+| `tests.execution` | OK / FAIL / WARN / INFO | the repo's own test suite, actually run, only with `--trust-target` (it executes the target's code) |
 | `language.declared_vs_real` | FAIL / WARN | the declared stack (`pyproject.toml`, `package.json`, ...) not matching the real byte histogram |
 | `readme.broken_relative_image` / `readme.hotlinked_image` | FAIL / WARN | a dead screenshot link, or one that will rot because it hotlinks another site |
 | `staleness.last_commit` | WARN / FAIL | a repo that has not been touched in a long time |

@@ -24,6 +24,7 @@ def build_ctx(
     offline: bool = True,
     run_tests: bool = False,
     history_secrets: bool = False,
+    trust_target: bool = False,
 ) -> CheckContext:
     profile = load_profile(PROFILES_DIR, profile_name)
     config = load_config(repo_path=repo_path, tool_root=REPO_ROOT)
@@ -34,6 +35,7 @@ def build_ctx(
         offline=offline,
         run_tests=run_tests,
         history_secrets=history_secrets,
+        trust_target=trust_target,
     )
 
 
