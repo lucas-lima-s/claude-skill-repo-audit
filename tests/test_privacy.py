@@ -12,7 +12,8 @@ def test_collapse_encoded_paths_turns_regex_class_into_slash() -> None:
     slash_class = "[" + ("\\" * 2) + "/]+"
     line = 'pattern = r"C:' + slash_class + "Users" + slash_class + 'someone"'
     collapsed = collapse_encoded_paths(line)
-    assert "c:/users/someone" in collapsed
+    drive = "c"
+    assert f"{drive}:/users/someone" in collapsed
 
 
 def test_concatenated_strings_joins_plus_and_pattern_helper() -> None:
